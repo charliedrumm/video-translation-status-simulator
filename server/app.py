@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 import threading
 import time
 import random
+import requests
 
 app = Flask(__name__)
 
@@ -9,28 +10,37 @@ app = Flask(__name__)
 tasks = {}
 
 # Configuration
-TASK_COMPLETION_TIME = 10  # Time in seconds to complete a task
-ERROR_RATE = 0.1          # 10% chance for a task to end in "error"
-
-
-def simulate_task(task_id):
-    """Simulate a task's lifecycle. This is done with threading to allow server remain responsive"""
-    time.sleep(TASK_COMPLETION_TIME)
+TASK_COMPLETION_TIME = 10  
+ERROR_RATE = 0.1          
+def simulate_task(task_id, webhook_url):
+    """Simulate a task's lifecycle."""
+    time.sleep(random.uniform(1, TASK_COMPLETION_TIME))
     if random.random() < ERROR_RATE:
         tasks[task_id]["status"] = "error"
     else:
         tasks[task_id]["status"] = "completed"
 
+    #Notify the client when the task is complete
+    if webhook_url:
+        try:
+            requests.post(webhook_url, json={"task_id": task_id, "status": tasks[task_id]["status"]})
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to send webhook for task {task_id}: {e}")
 
 @app.route("/tasks", methods=["POST"])
 def create_task():
     """Create a new task."""
+    data = request.json
+    webhook_url = data.get("webhook_url") if data else None
+
     task_id = str(len(tasks) + 1)
     tasks[task_id] = {
-        "status": "pending"
+        "status": "pending",
+        "webhook_url": webhook_url
     }
-    #Threading ensures the server is responsive
-    threading.Thread(target=simulate_task, args=(task_id,)).start()
+
+    #Simulate the task using a thread for async processing
+    threading.Thread(target=simulate_task, args=(task_id, webhook_url)).start()
     return jsonify({"task_id": task_id}), 201
 
 
