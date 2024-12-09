@@ -7,20 +7,17 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 # In-memory storage for tasks and clients
 tasks = {}  # Stores task info with task_id as key
-clients = {}  # Maps client sid to a list of their task_ids
 
 # Configuration
 TASK_COMPLETION_TIME = 10  # Time in seconds to complete a task
 ERROR_RATE = 0.1           # 10% chance for a task to end in "error"
 
 
-# WebSocket Handlers
 @socketio.on("connect")
 def handle_connect():
     """Handle client connection."""
     sid = request.sid
     print(f"Client connected: {sid}")
-    clients[sid] = []  # Initialize an empty task list for this client
     emit("server_response", {"message": "Connection successful"})
 
 
@@ -29,9 +26,6 @@ def handle_disconnect():
     """Handle client disconnection."""
     sid = request.sid
     print(f"Client disconnected: {sid}")
-    if sid in clients:
-        # Clean up tasks associated with this client
-        del clients[sid]
 
 
 @socketio.on("wait_for_task")
@@ -41,17 +35,15 @@ def handle_wait_for_task(data):
     sid = request.sid
     if task_id in tasks:
         tasks[task_id]["sid"] = sid
-        clients[sid].append(task_id)  # Add task to client's list
         print(f"Client {sid} is waiting for task {task_id}")
     else:
         emit("task_error", {"message": f"Task {task_id} not found"}, to=sid)
 
 
-# Task Processing
-async def simulate_task(task_id):
-    """Simulate task processing asynchronously."""
+def simulate_task(task_id):
+    """Simulate task processing."""
     print(f"Simulating task {task_id}...")
-    await socketio.sleep(TASK_COMPLETION_TIME)  # Simulate delay
+    socketio.sleep(TASK_COMPLETION_TIME)  # Non-blocking delay
 
     # Randomly determine task outcome
     status = "completed" if random.random() >= ERROR_RATE else "error"
@@ -66,7 +58,7 @@ async def simulate_task(task_id):
         print(f"Task {task_id} has no associated client.")
 
 
-# HTTP Endpoints
+
 @app.route("/tasks", methods=["POST"])
 def create_task():
     """Create a new task."""
