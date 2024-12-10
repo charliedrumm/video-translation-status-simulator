@@ -35,9 +35,10 @@ class CheckStatus:
         """Disconnect from the WebSocket server."""
         self.sio.disconnect()
 
-    def create_task(self):
+    def create_task(self, delay=10):
         """Create a new task."""
-        response = requests.post(f"{self.server_url}/tasks")
+        payload = {"delay": delay}
+        response = requests.post(f"{self.server_url}/tasks", json=payload)
         if response.status_code == 201:
             task_id = response.json()["task_id"]
             print(f"Task {task_id} created.")
@@ -62,3 +63,9 @@ class CheckStatus:
             pass
 
         return {"status" :self.received_updates[task_id]}
+    
+    def create_and_wait(self, delay):
+        """Create a task and wait for its completion."""
+        task_id = self.create_task(delay)
+        result = self.wait_for_task(task_id)
+        return task_id, result
