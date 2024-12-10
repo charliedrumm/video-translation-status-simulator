@@ -1,6 +1,6 @@
 import requests
 import socketio
-
+import time
 
 class CheckStatus:
     def __init__(self, server_url, websocket_url):
@@ -28,11 +28,9 @@ class CheckStatus:
             print("Disconnected from WebSocket server.")
 
     def connect(self):
-        """Connect to the WebSocket server."""
         self.sio.connect(self.websocket_url)
 
     def disconnect(self):
-        """Disconnect from the WebSocket server."""
         self.sio.disconnect()
 
     def create_task(self, delay=10):
@@ -54,13 +52,18 @@ class CheckStatus:
         else:
             raise Exception(f"Failed to get status for task {task_id}: {response.text}")
 
-    def wait_for_task(self, task_id):
+    def wait_for_task(self, task_id, timeout=30):
         """Send wait_for_task to server and wait for response"""
         self.sio.emit("wait_for_task", {"task_id": task_id})
 
-        #wait until the task is over
-        while task_id not in self.received_updates:
-            pass
+        #wait until the task is over or times out
+        start_time = time.time()
+        while True:
+            if task_id in self.received_updates:
+                break
+            if time.time() - start_time > timeout:
+                raise TimeoutError(f"Timeout while waiting for task {task_id}.")
+            time.sleep(0.1)
 
         return {"status" :self.received_updates[task_id]}
     
