@@ -9,11 +9,11 @@ class CheckStatus:
         self.sio = socketio.Client()
         self.received_updates = {}
 
-        # WebSocket event handlers
+        
         @self.sio.on("connect")
         def on_connect():
             print("Connected to WebSocket server.")
-            self.sid = self.sio.sid  # Store the session ID
+            self.sid = self.sio.sid 
             print(f"Session ID: {self.sid}")
 
         @self.sio.on("task_update")
@@ -44,14 +44,21 @@ class CheckStatus:
             return task_id
         else:
             raise Exception(f"Failed to create task: {response.text}")
+        
+    def get_status(self, task_id):
+        """Get the current status of a task"""
+        response = requests.get(f"{self.server_url}/tasks/{task_id}/status")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Failed to get status for task {task_id}: {response.text}")
 
     def wait_for_task(self, task_id):
-        """Send a `wait_for_task` event and block until a response is received."""
-        print(f"Waiting for task {task_id} to complete...")
+        """Send wait_for_task to server and wait for response"""
         self.sio.emit("wait_for_task", {"task_id": task_id})
 
-        # Block until the task status is updated
+        #wait until the task is over
         while task_id not in self.received_updates:
             pass
 
-        return self.received_updates[task_id]
+        return {"status" :self.received_updates[task_id]}

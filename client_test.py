@@ -1,6 +1,5 @@
-import threading
 from client.CheckStatus import CheckStatus
-
+import time
 
 
 def test_client_library():
@@ -23,6 +22,11 @@ def test_client_library():
         for task_id in task_ids:
             status = client.wait_for_task(task_id)
             print(f"Task {task_id} completed with status: {status}")
+        
+        task_id = client.create_task()
+        time.sleep(10)
+        print(client.get_status(task_id))
+        print(client.wait_for_task(task_id))
 
     finally:
         # Disconnect from the WebSocket server
