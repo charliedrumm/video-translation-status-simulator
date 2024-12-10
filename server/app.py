@@ -42,17 +42,17 @@ def handle_wait_for_task(data):
         emit("task_error", {"message": f"Task {task_id} not found"}, to=sid)
 
 
-def simulate_task(task_id):
+def simulate_task(task_id, delay):
     """Simulate task processing."""
     print(f"Simulating task {task_id}...")
-    socketio.sleep(TASK_COMPLETION_TIME)  # Non-blocking delay
+    socketio.sleep(delay)  #Non-blocking delay so the server will be responsive
 
-    # Randomly determine task outcome
+    #Randomly determine task outcome
     status = "completed" if random.random() >= ERROR_RATE else "error"
     tasks[task_id]["status"] = status
     sid = tasks[task_id].get("sid")
-
-    # Notify the client when task is finished
+    print(f"Task {task_id} completed with status '{status}'.")
+    #Notify the client when task is finished
     if sid:
         print(f"Task {task_id} completed with status '{status}'. Notifying client {sid}.")
         socketio.emit("task_update", {"task_id": task_id, "status": status}, to=sid)
@@ -60,17 +60,17 @@ def simulate_task(task_id):
         print(f"Task {task_id} has no associated client.")
 
 
-
 @app.route("/tasks", methods=["POST"])
 def create_task():
     """Create a new task."""
     task_id = str(len(tasks) + 1)
+    delay = request.json.get("delay", 10)
     tasks[task_id] = {
         "status": "pending",
         "sid": None  # Will be assigned when the client listens for the task
     }
     # Start processing the task asynchronously
-    socketio.start_background_task(simulate_task, task_id)
+    socketio.start_background_task(simulate_task, task_id, delay)
     print(f"Task {task_id} created and started.")
     return jsonify({"task_id": task_id}), 201
 
