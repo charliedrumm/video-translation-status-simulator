@@ -33,7 +33,9 @@ def handle_wait_for_task(data):
     """Associate a task with the client's session."""
     task_id = data.get("task_id")
     sid = request.sid
-    if task_id in tasks:
+    if task_id in tasks and tasks[task_id]["status"] != 'pending':
+        socketio.emit("task_update", {"task_id": task_id, "status": tasks[task_id]["status"]}, to=sid)
+    elif task_id in tasks:
         tasks[task_id]["sid"] = sid
         print(f"Client {sid} is waiting for task {task_id}")
     else:
