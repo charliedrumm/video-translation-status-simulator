@@ -1,10 +1,11 @@
+import os
 from client.CheckStatus import CheckStatus
 from concurrent.futures import ThreadPoolExecutor
 
 
 def test_client_library():
-    server_url = "http://localhost:5000"
-    websocket_url = "http://localhost:5000/socket.io/"
+    server_url = os.getenv("SERVER_URL", "http://localhost:5000")
+    websocket_url = os.getenv("WEBSOCKET_URL", "http://localhost:5000/socket.io/")
     client = CheckStatus(server_url, websocket_url)
     client.connect()
 
@@ -16,7 +17,7 @@ def test_client_library():
 
         #I am using ThreadPoolExecuter to simulate multiple tasks being made at once
         with ThreadPoolExecutor(max_workers=5) as executor:
-            task_times = [10,4,6,7,8] #make the tasks different times to show shorter tasks are not blocked
+            task_times = [20,4,6,2,8] #make the tasks different times to show shorter tasks are not blocked
             for i in range(5):
                 executor.submit(create_and_wait_task, task_times[i])
             

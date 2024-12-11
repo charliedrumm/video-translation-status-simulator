@@ -1,0 +1,30 @@
+services:
+  server:
+    build:
+      context: ./server
+    ports:
+      - "5000:5000"
+    networks:
+      - app_network
+    logging:
+      driver: "none" 
+    environment:
+      - FLASK_ENV=development
+    command: ["python", "app.py"]
+
+  client:
+    build:
+      context: .
+    depends_on:
+      - server
+    networks:
+      - app_network
+    environment:
+      - SERVER_URL=http://server:5000
+      - WEBSOCKET_URL=http://server:5000/socket.io/
+    command: ["./wait-for-it.sh", "python", "client_test.py"]
+
+
+networks:
+  app_network:
+    driver: bridge
