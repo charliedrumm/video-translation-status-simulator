@@ -2,6 +2,14 @@
 
 The library uses WebSockets to communicate with the server. I chose this implementation over repetitive HTTP polling because it provides the client with real-time updates on when their video has finished processing, eliminating the need to continuously poll the server with HTTP requests to get the status. Based on the brief, “When you use video translation on Heygen, behind the scenes it is a time-consuming process depending on how long the video is and many other factors,” I determined that continuous HTTP polling would not be ideal, as the client might have to make numerous requests while waiting for the video to finish processing. Since the server only needs to send a small status update, WebSockets were a better fit for the task.
 
+- [Client README](https://github.com/charliedrumm/video-translation-status-simulator/blob/main/client/README.md)
+
+## **Structure**
+- **Server**: Simulates task processing and sends updates via WebSockets.
+- **Client**: Connects to the server, creates tasks, and waits for real-time updates.
+
+I dockerised the project to make it easy to run on different devices. I had to add a wait-for-it.sh script to the client test to ensure that the server was up and running before testing the library.
+
 ## **How to Run**
 
 ### **1. Prerequisites**
