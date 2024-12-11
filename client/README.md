@@ -52,7 +52,18 @@ print(f"Task {task_id} created.")
 
 ---
 
-### **4. Wait for Task Completion**
+### **4. Get the Status of a Task**
+
+Use the `get_status` method to query the current status of a task at any time.
+
+```python
+status = client.get_status(task_id)
+print(f"Current status of task {task_id}: {status['status']}")
+```
+
+---
+
+### **5. Wait for Task Completion**
 
 Use the `wait_for_task` method to wait for the task to complete. The method will block until the task finishes or the timeout is reached.
 
@@ -63,7 +74,7 @@ print(f"Task {task_id} completed with status: {result['status']}")
 
 ---
 
-### **5. Create and Wait for a Task in One Step**
+### **6. Create and Wait for a Task in One Step**
 
 Use `create_and_wait` to create a task and wait for its completion in a single method call.
 
@@ -74,7 +85,7 @@ print(f"Task {task_id} completed with status: {result['status']}")
 
 ---
 
-### **6. Disconnect**
+### **7. Disconnect**
 
 After completing your operations, disconnect from the WebSocket server.
 
