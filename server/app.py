@@ -9,7 +9,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 tasks = {}  # Stores task info with task_id as key
 
 # Configuration
-TASK_COMPLETION_TIME = 10  # Time in seconds to complete a task
+TASK_COMPLETION_TIME = 10  # Default time in seconds to complete a task
 ERROR_RATE = 0.1           # 10% chance for a task to end in "error"
 
 
@@ -64,7 +64,7 @@ def simulate_task(task_id, delay):
 def create_task():
     """Create a new task."""
     task_id = str(len(tasks) + 1)
-    delay = request.json.get("delay", 10)
+    delay = request.args.get("delay", default=TASK_COMPLETION_TIME, type=int)
     tasks[task_id] = {
         "status": "pending",
         "sid": None  # Will be assigned when the client listens for the task
@@ -101,4 +101,4 @@ def delete_task(task_id):
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, port=5000)
+    socketio.run(app, host="0.0.0.0",  port=5000)
